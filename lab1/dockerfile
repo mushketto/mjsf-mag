@@ -1,0 +1,15 @@
+# Стадія збірки: образ Node для складання застосунку
+FROM node:22-alpine AS build-stage
+WORKDIR /app
+# Спершу тільки package.json і package-lock.json — щоб кеш npm install
+# не скидався від кожної правки коду
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+# Стадія віддачі: легкий Nginx для статичних файлів
+FROM nginx:1.27-alpine AS production-stage
+COPY --from=build-stage /app/dist /usr/share/nginx/html
+EXPOSE 80
+# Nginx має працювати на передньому плані, інакше контейнер одразу завершиться
+CMD ["nginx", "-g", "daemon off;"]
