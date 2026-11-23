@@ -1,0 +1,78 @@
+<script setup>
+import { computed } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+
+const props = defineProps({
+  product: {
+    type: Object,
+    required: true,
+  },
+})
+
+const route = useRoute()
+
+const priceFormatter = new Intl.NumberFormat('uk-UA', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 2,
+})
+
+const productLink = computed(() => {
+  const query =
+    typeof route.query.q === 'string' && route.query.q.trim()
+      ? { q: route.query.q.trim() }
+      : {}
+
+  return {
+    name: 'product-overview',
+    params: { id: String(props.product.id) },
+    query,
+  }
+})
+</script>
+
+<template>
+  <article class="product-card">
+    <div class="product-card__visual">
+      <span
+        v-if="product.discountPercentage >= 10"
+        class="product-card__discount"
+      >
+        −{{ Math.round(product.discountPercentage) }}%
+      </span>
+      <img
+        class="product-card__image"
+        :src="product.thumbnail"
+        :alt="product.title"
+        loading="lazy"
+        width="420"
+        height="320"
+      />
+    </div>
+
+    <div class="product-card__body">
+      <div class="product-card__meta">
+        <span class="product-card__category">{{ product.category }}</span>
+        <span class="product-card__rating">
+          {{ product.rating.toFixed(1) }} / 5
+        </span>
+      </div>
+
+      <h2 class="product-card__title">
+        <RouterLink class="product-card__link" :to="productLink">
+          {{ product.title }}
+        </RouterLink>
+      </h2>
+      <p class="product-card__description">{{ product.description }}</p>
+
+      <div class="product-card__footer">
+        <strong class="product-card__price">
+          {{ priceFormatter.format(product.price) }}
+        </strong>
+        <span class="product-card__stock">
+          {{ product.stock > 0 ? `У наявності · ${product.stock}` : 'Немає в наявності' }}
+        </span>
+      </div>
+    </div>
+  </article>
+</template>
